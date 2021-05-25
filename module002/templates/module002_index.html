@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Flasky{% endblock %}
+
+{% block content %}
+<style>
+    .containere{
+        margin-left: 15px;
+    }
+    .hid{
+        background-color: #D8D3D2;
+    }
+    .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    }
+</style>
+<div class="page-header">
+    <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!</h1>
+</div>
+<div class="containere">
+    <h2>Courses followed</h2>
+    <input type="hidden" name="lastcourse" id="lastcourse" value="1">
+    <select name="course" id="course" class="select">
+        <option disabled selected value="selectv">Select a course</option>
+        {% for follow in follows %}
+            {% if follow.user_id == current_user.id %}
+                <option label="{{ follow.course_id }}" value="{{ follow.course_code }}">{{ follow.course_name }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    {% for follow in follows %}
+        {% if follow.user_id == current_user.id %}
+            <div id="{{ follow.course_code }}" style="display: none">
+                <h3>Post of {{ follow.course_name }}</h3>
+                {% for comment in comments %}
+                    {% if comment.course_id == follow.course_id %}
+                        {% if (comment.author_id == current_user.id) and (comment.disabled == 1) %}
+                            <div class="hid">
+                                <img src="{{ current_user.avatar }}" alt="avatar del usuario" class="avatar">
+                                <div>
+                                    {{ comment.body }}
+                                </div>
+                                <div>
+                                    <small>
+                                        Posted
+                                        {% if comment.timestamp %}
+                                            {{ comment.timestamp.strftime("%A, %d %B %Y at %H:%M") }}
+                                        {% else %}
+                                            at an unknown time
+                                        {% endif %}
+                                        by
+                                        {% if comment.commenter %}
+                                            {{ comment.commenter.username }}
+                                        {% else %}
+                                            anonymous
+                                        {% endif %}
+                                    </small>
+                                    <form action="{{url_for('module002.hide',id=comment.id)}}" method="POST">
+                                        <input type="hidden" name="action" value="{{comment.id}}">
+                                        <input type="submit" class="btn btn-success" id="volume-{{comment.id}}" value="Show">
+                                    </form>
+                                </div>
+                            </div>
+                        {% elif comment.disabled == 0 %}
+                            <div>
+                                <img src="{{ comment.commenter.avatar }}" alt="avatar del usuario" class="avatar">
+                                <div>
+                                    {{ comment.body }}
+                                </div>
+                                <div>
+                                    <small>
+                                        Posted
+                                        {% if comment.timestamp %}
+                                            {{ comment.timestamp.strftime("%A, %d %B %Y at %H:%M") }}
+                                        {% else %}
+                                            at an unknown time
+                                        {% endif %}
+                                        by
+                                        {% if comment.commenter %}
+                                            {{ comment.commenter.username }}
+                                        {% else %}
+                                            anonymous
+                                        {% endif %}
+                                    </small>
+                                    {% if comment.author_id == current_user.id %}
+                                        <form action="{{url_for('module002.hide',id=comment.id)}}" method="POST">
+                                            <input type="hidden" name="action" value="{{comment.id}}">
+                                            <input type="submit" class="btn btn-danger" id="volume-{{comment.id}}" value="Hide">
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                <div>
+                    {% if current_user.is_authenticated %}
+                        <form class="form-signin" method="POST" action="{{url_for('module002.index')}}">
+                                {{ form.hidden_tag() }}
+
+                            	{{ wtf.form_field(form.body) }}
+                                <input type="hidden" name="lastcourseid" id="lastcourseid" value="{{ follow.course_id }}">
+                                <button class="btn btn-lg btn-warning btn-block" type="submit">Comment</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+</div>
+<script src="static/scripts.js"></script>
+{% endblock %}
